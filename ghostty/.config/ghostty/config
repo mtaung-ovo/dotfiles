@@ -1,0 +1,5 @@
+theme = Gruvbox Material Light
+font-family = "DepartureMono Nerd Font Mono"
+font-size = 16
+
+cursor-style-blink = true
