@@ -1,0 +1,30 @@
+# focus windows (vim-style)
+alt - h : yabai -m window --focus west
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - l : yabai -m window --focus east
+
+# swap windows
+shift + alt - h : yabai -m window --swap west
+shift + alt - j : yabai -m window --swap south
+shift + alt - k : yabai -m window --swap north
+shift + alt - l : yabai -m window --swap east
+
+# toggle float + center on screen
+alt - t : yabai -m window --toggle float --grid 4:4:1:1:2:2
+
+# toggle fullscreen zoom
+alt - f : yabai -m window --toggle zoom-fullscreen
+
+# rotate tree
+alt - r : yabai -m space --rotate 270
+
+# balance window sizes
+alt - b : yabai -m space --balance
+
+# toggle split direction
+alt - e : yabai -m window --toggle split
+
+# focus display (ultrawide + laptop)
+alt - 1 : yabai -m display --focus 1
+alt - 2 : yabai -m display --focus 2

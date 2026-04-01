@@ -1,0 +1,75 @@
+#!/usr/bin/env sh
+
+# layout
+yabai -m config layout                    bsp
+yabai -m config window_placement          second_child
+yabai -m config split_ratio               0.50
+yabai -m config split_type                auto
+yabai -m config auto_balance              off
+
+# padding & gaps (multi-window defaults)
+yabai -m config top_padding               24
+yabai -m config bottom_padding            24
+yabai -m config left_padding              24
+yabai -m config right_padding             24
+yabai -m config window_gap                16
+
+# mouse
+yabai -m config mouse_follows_focus       on
+yabai -m config focus_follows_mouse       off
+yabai -m config mouse_modifier            alt
+yabai -m config mouse_action1             move
+yabai -m config mouse_action2             resize
+yabai -m config mouse_drop_action         swap
+
+# appearance (SIP-compatible only)
+yabai -m config window_shadow             on
+yabai -m config window_opacity            off
+yabai -m config window_animation_duration 0.0
+
+# ── dynamic single-window centering ──────────────────────────────
+# when only 1 tiled window exists on a space, inflate padding to
+# ~20% of display width on each side (~60% window width).
+# when 2+ tiled windows exist, snap back to normal 24px padding.
+
+adjust_padding='
+  sleep 0.3
+  display_width=$(yabai -m query --displays --display mouse | \
+    /usr/bin/python3 -c "import sys,json; d=json.load(sys.stdin); print(int(d[\"frame\"][\"w\"]))")
+  window_count=$(yabai -m query --windows --space | \
+    /usr/bin/python3 -c "import sys,json; print(len([w for w in json.load(sys.stdin) if not w[\"is-floating\"] and not w[\"is-minimized\"] and w[\"is-visible\"]]))")
+  if [ "$window_count" -le 1 ]; then
+    if [ "$display_width" -le 2000 ]; then
+      app_name=$(yabai -m query --windows --space | \
+        /usr/bin/python3 -c "import sys,json; ws=[w for w in json.load(sys.stdin) if not w[\"is-floating\"] and not w[\"is-minimized\"] and w[\"is-visible\"]]; print(ws[0][\"app\"] if ws else \"\")")
+      if [ "$app_name" = "Google Chrome" ] || [ "$app_name" = "PyCharm" ] || [ "$app_name" = "Code" ]; then
+        side_padding=$(( display_width * 3 / 100 ))
+        vertical_padding=$(( display_width * 1 / 100 ))
+      else
+        side_padding=$(( display_width * 8 / 100 ))
+        vertical_padding=$(( display_width * 1 / 100 ))
+      fi
+    else
+      side_padding=$(( display_width * 14 / 100 ))
+      vertical_padding=$(( display_width * 2 / 100 ))
+    fi
+    yabai -m config --space mouse top_padding    "$vertical_padding"
+    yabai -m config --space mouse bottom_padding "$vertical_padding"
+    yabai -m config --space mouse left_padding   "$side_padding"
+    yabai -m config --space mouse right_padding  "$side_padding"
+  else
+    yabai -m config --space mouse top_padding    24
+    yabai -m config --space mouse bottom_padding 24
+    yabai -m config --space mouse left_padding   24
+    yabai -m config --space mouse right_padding  24
+  fi
+'
+
+yabai -m signal --add event=window_created           action="$adjust_padding" label=center_on_create
+yabai -m signal --add event=window_destroyed         action="$adjust_padding" label=center_on_destroy
+yabai -m signal --add event=window_minimized         action="$adjust_padding" label=center_on_minimize
+yabai -m signal --add event=window_deminimized       action="$adjust_padding" label=center_on_deminimize
+yabai -m signal --add event=space_changed            action="$adjust_padding" label=center_on_space_change
+yabai -m signal --add event=application_front_switched action="$adjust_padding" label=center_on_app_switch
+
+echo "yabai configuration loaded.."
